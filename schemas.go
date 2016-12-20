@@ -14,7 +14,7 @@ import (
 
 var (
 	schemaVersions = map[string]bool{"0.1": true}
-	modelVersions = map[string]bool{"1.0": true}
+	modelVersions  = map[string]bool{"1.0": true}
 )
 
 type requestError struct {
@@ -41,7 +41,6 @@ type Request struct {
 	Timestamp     time.Time              `json:"timestamp"`
 	Data          map[string]interface{} `json:"data"`
 }
-
 
 // UnmarshalJSON implements custom json unmarshalling with validation
 // TODO: separate validation

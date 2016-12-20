@@ -1,10 +1,11 @@
 package core
 
 import (
-	"testing"
 	"bytes"
 	"encoding/json"
+	"testing"
 	"time"
+
 	"github.com/speps/go-hashids"
 )
 
@@ -13,11 +14,11 @@ func TestDecodeHashID(t *testing.T) {
 	hd := hashids.NewData()
 	hd.MinLength = 8
 	hd.Salt = "test-123-test"
-	hashId, err := hashids.NewWithData(hd).Encode([]int{expected})
+	hashID, err := hashids.NewWithData(hd).Encode([]int{expected})
 	if err != nil {
 		t.Error(err)
 	}
-	actual, err := DecodeHashID(hd.Salt, hashId)
+	actual, err := DecodeHashID(hd.Salt, hashID)
 	if err != nil {
 		t.Error(err)
 	}
