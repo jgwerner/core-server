@@ -23,7 +23,7 @@ const domain = "localhost:8888"
 var (
 	baseURI       = fmt.Sprintf("http://%s", domain)
 	wsURI         = fmt.Sprintf("ws://%s", domain)
-	currentKernel = kernel{Name: "python3"}
+	currentKernel = kernel{Name: "python"}
 	kgPID         int
 )
 
