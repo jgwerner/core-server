@@ -17,7 +17,6 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -yq python3
   - sudo apt-get install -yq r-base
-  - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
 before_script:
@@ -28,12 +27,7 @@ script:
   - docker --version  # document the version travis is using
   - pip install --user awscli # install aws cli w/o sudo
   - export PATH=$PATH:$HOME/.local/bin # put aws in the path
-  - eval $(aws ecr get-login --region us-east-1) #needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
-# build the image
-after_script:
-  #build the image
-  - docker build -t 860100747351.dkr.ecr.us-east-1.amazonaws.com/core-server .
-  #tag image
-  # - docker tag 860100747351.dkr.ecr.us-east-1.amazonaws.com/model 860100747351.dkr.ecr.us-east-1.amazonaws.com/model:build-$TRAVIS_BUILD_NUMBER
-  #push image
-  - docker push 860100747351.dkr.ecr.us-east-1.amazonaws.com/core-server:latest
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+notifications:
+  - slack: 3blades:WkvRG9pgF8jIOpq8i8BjRqy3
