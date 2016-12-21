@@ -55,7 +55,8 @@ type kernel struct {
 
 // RunKernelGateway runs jupyter kernel gateway
 // https://github.com/jupyter/kernel_gateway
-func RunKernelGateway(stdout, stderr io.Writer) {
+func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
+	currentKernel.Name = kernelName
 	cmd := exec.Command(
 		"jupyter",
 		"kernelgateway",
@@ -90,8 +91,8 @@ func SetKernelName(name string) {
 	currentKernel.Name = name
 }
 
-// getKernel gets kernel id by name and starts kernel process
-func getKernel() {
+// GetKernel gets kernel id by name and starts kernel process
+func GetKernel() {
 	var body bytes.Buffer
 	json.NewEncoder(&body).Encode(&currentKernel)
 	credentials := url.Values{}
@@ -189,13 +190,16 @@ func handleResponseMsg(respMsg *msg, resp chan string, errCh chan string) {
 		}
 		errCh <- buf.String()
 		break
+	case "execute_reply":
+		resp <- ""
+		break
 	}
 }
 
 // dialKernelWebSocket is a helper function to quick message sending
 func dialKernelWebSocket() *websocket.Conn {
 	if currentKernel.ID == "" {
-		getKernel()
+		GetKernel()
 	}
 	uri := fmt.Sprintf("%s/api/kernels/%s/channels", wsURI, currentKernel.ID)
 	ws, err := websocket.Dial(uri, "", baseURI)

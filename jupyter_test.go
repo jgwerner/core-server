@@ -15,9 +15,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	RunKernelGateway(os.Stdout, os.Stderr)
+	RunKernelGateway(os.Stdout, os.Stderr, "python")
 	time.Sleep(1 * time.Second)
-	getKernel()
+	GetKernel()
 	exitCode := m.Run()
 	shutdownCurrentKernel()
 	syscall.Kill(kgPID, syscall.SIGTERM)
