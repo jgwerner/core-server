@@ -4,5 +4,15 @@
 [![Code Climate](https://codeclimate.com/github/3Blades/core-server/badges/gpa.svg)](https://codeclimate.com/github/3Blades/core-server)
 [![slack in](https://slackin-tkscnxhpky.now.sh/badge.svg)](https://slackin-tkscnxhpky.now.sh/)
 
-# core-server
-Core server code used on child server types.
+# Core server
+
+Core server used for child server types.
+
+## Copyright and license
+
+Copyright © 2016-2017 3Blades, LLC. All rights reserved, except as follows. Code
+is released under the BSD 3.0 license. The README.md file, and files in the
+"docs" folder are licensed under the Creative Commons Attribution 4.0
+International License under the terms and conditions set forth in the file
+"LICENSE.docs". You may obtain a duplicate copy of the same license, titled
+CC-BY-SA-4.0, at http://creativecommons.org/licenses/by/4.0/.
