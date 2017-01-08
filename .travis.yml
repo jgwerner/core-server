@@ -19,6 +19,7 @@ before_install:
   - sudo apt-get install -yq r-base
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - pip install --user jupyter_kernel_gateway
