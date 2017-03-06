@@ -1,20 +1,18 @@
-package core
+package main
 
 import (
-	"database/sql"
-	"log"
 	"time"
 
-	"github.com/lib/pq"
+	"github.com/3Blades/go-sdk/client/projects"
 )
 
 // Stats is base statistics gatherer
 type Stats struct {
-	Start      pq.NullTime
-	Stop       pq.NullTime
-	Size       int64
-	ExitCode   int
-	Stacktrace string
+	Start      time.Time `json:"start"`
+	Stop       time.Time `json:"stop,omitempty"`
+	Size       int64     `json:"size"`
+	ExitCode   int       `json:"exit_code"`
+	Stacktrace string    `json:"stacktrace"`
 }
 
 // NewStats creates Stats object
@@ -24,21 +22,22 @@ func NewStats() *Stats {
 
 // Duration calculates run duration
 func (s *Stats) Duration() time.Duration {
-	return s.Stop.Time.Sub(s.Start.Time) / time.Millisecond
+	return s.Stop.Sub(s.Start) / time.Millisecond
 }
 
 // Send writes statistics data to database
-func (s *Stats) Send(dbURL string, serverID int) error {
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Printf("Error connecting to database: %s\n", err)
-		return err
-	}
-	defer db.Close()
-	_, err = db.Exec(`INSERT INTO server_run_statistics (start, stop, size, exit_code, stacktrace, server_id)
-	 VALUES ($1, $2, $3, $4, $5, $6)`, s.Start, s.Stop, s.Size, s.ExitCode, s.Stacktrace, serverID)
-	if err != nil {
-		log.Printf("Error updating statistics: %s\n", err)
-	}
+func (s *Stats) Send(args *Args) error {
+	cli := APIClient(args.ApiRoot, args.ApiKey)
+	params := projects.NewProjectsServersRunStatsCreateParams()
+	params.SetNamespace(args.Namespace)
+	params.SetProjectPk(args.ProjectID)
+	params.SetServerPk(args.ServerID)
+	params.SetData(projects.ProjectsServersRunStatsCreateBody{
+		Start:      s.Start.Format(time.RFC3339),
+		Stop:       s.Stop.Format(time.RFC3339),
+		ExitCode:   int64(s.ExitCode),
+		Stacktrace: s.Stacktrace,
+	})
+	_, err := cli.Projects.ProjectsServersRunStatsCreate(params)
 	return err
 }

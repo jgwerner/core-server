@@ -1,7 +1,8 @@
-package core
+package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -31,19 +32,14 @@ func TestGetKernel(t *testing.T) {
 }
 
 func TestRun_Success(t *testing.T) {
-	expected := `'{"test": 1}'`
+	expected := `{'test': 1}`
 	code := fmt.Sprintf(`def test():
 	return %s
 test()`, expected)
-	respChan, errChan := Run(code)
-	var data string
-	select {
-	case data = <-respChan:
-		if data != expected {
-			t.Errorf("Wrong data\nExpected: %s\nActual: %s\n", expected, data)
-		}
-	case data = <-errChan:
-		t.Error(data)
+	stats := NewStats()
+	data, _ := Run(context.Background(), stats, code)
+	if data != expected {
+		t.Errorf("Wrong data\nExpected: %s\nActual: %s\n", expected, data)
 	}
 }
 
@@ -67,25 +63,20 @@ def test():
 test()`, stdoutMsg, stderrMsg)
 	go assert(os.Stdout, stdoutMsg)
 	go assert(os.Stdout, stderrMsg)
-	respChan, errChan := Run(code)
-	select {
-	case <-respChan:
-	case <-errChan:
-	}
+	stats := NewStats()
+	Run(context.Background(), stats, code)
 
 }
 
 func TestRun_Fail(t *testing.T) {
 	code := `test1`
-	respChan, errChan := Run(code)
-	var data string
-	select {
-	case data = <-respChan:
+	stats := NewStats()
+	data, err := Run(context.Background(), stats, code)
+	if err == nil {
 		t.Error("No error with bad data")
-	case data = <-errChan:
-		if data == "" {
-			t.Error("No traceback")
-		}
+	}
+	if data == "" {
+		t.Error("No traceback")
 	}
 }
 

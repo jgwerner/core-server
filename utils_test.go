@@ -1,31 +1,11 @@
-package core
+package main
 
 import (
 	"bytes"
 	"encoding/json"
 	"testing"
 	"time"
-
-	"github.com/speps/go-hashids"
 )
-
-func TestDecodeHashID(t *testing.T) {
-	expected := 111
-	hd := hashids.NewData()
-	hd.MinLength = 8
-	hd.Salt = "test-123-test"
-	hashID, err := hashids.NewWithData(hd).Encode([]int{expected})
-	if err != nil {
-		t.Error(err)
-	}
-	actual, err := DecodeHashID(hd.Salt, hashID)
-	if err != nil {
-		t.Error(err)
-	}
-	if actual != expected {
-		t.Error("Ids don't match")
-	}
-}
 
 func TestValidateRequest_Success(t *testing.T) {
 	r := Request{
