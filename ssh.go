@@ -1,75 +1,59 @@
-package core
+package main
 
 import (
 	"fmt"
 	"io"
-	"net"
-
-	"log"
-
-	"database/sql"
 	"io/ioutil"
+	"net"
 	"path"
 	"strconv"
 	"strings"
 
+	"github.com/3Blades/go-sdk/client/projects"
 	cssh "golang.org/x/crypto/ssh"
 )
 
 // CreateSSHTunnels creates defined in db ssh tunnels
-func CreateSSHTunnels(dbURL, resourceDir string, serverID int) error {
-	db, err := sql.Open("postgres", dbURL)
+func CreateSSHTunnels(args *Args) error {
+	sshKeyAuth, err := getSSHKeyAuthMethod(args.ResourceDir)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
-	rows, err := db.Query(
-		`SELECT
-		  ssh_tunnel.local_port,
-		  ssh_tunnel.host,
-		  ssh_tunnel.remote_port,
-		  ssh_tunnel.endpoint,
-		  ssh_tunnel.username
-		FROM ssh_tunnel
-		WHERE ssh_tunnel.server_id = $1`, serverID)
-
+	cli := APIClient(args.ApiRoot, args.ApiKey)
+	params := projects.NewProjectsServersSSHTunnelsListParams()
+	params.SetNamespace("rav")
+	params.SetProjectPk(args.ProjectID)
+	params.SetServerPk(args.ServerID)
+	res, err := cli.Projects.ProjectsServersSSHTunnelsList(params)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var endpt string
-		tunnel := sshTunnel{
-			local:  &endpoint{},
-			server: &endpoint{},
-			remote: &endpoint{},
-			config: &cssh.ClientConfig{},
+	for _, apiTunnel := range res.Payload {
+		splitEndpoint := strings.Split(*apiTunnel.Endpoint, ":")
+		tunnel := &sshTunnel{
+			local: &endpoint{
+				port: int(*apiTunnel.LocalPort),
+				host: "0.0.0.0",
+			},
+			server: &endpoint{
+				host: *apiTunnel.Host,
+				port: int(*apiTunnel.RemotePort),
+			},
+			remote: &endpoint{
+				host: splitEndpoint[0],
+			},
+			config: &cssh.ClientConfig{
+				User: *apiTunnel.Username,
+				Auth: []cssh.AuthMethod{sshKeyAuth},
+			},
 		}
-		err := rows.Scan(
-			&tunnel.local.port,
-			&tunnel.server.host,
-			&tunnel.server.port,
-			&endpt,
-			&tunnel.config.User,
-		)
-		if err != nil {
-			return err
-		}
-		tunnel.local.host = "0.0.0.0"
-		sshKeyAuth, err := getSSHKeyAuthMethod(resourceDir)
-		if err != nil {
-			return err
-		}
-		tunnel.config.Auth = []cssh.AuthMethod{sshKeyAuth}
-		splitEndpoint := strings.Split(endpt, ":")
-		tunnel.remote.host = splitEndpoint[0]
 		tunnel.remote.port, err = strconv.Atoi(splitEndpoint[1])
 		if err != nil {
 			return err
 		}
-		go tunnel.Start()
+		go tunnel.start()
 	}
-	return rows.Err()
+	return nil
 }
 
 func getSSHKeyAuthMethod(resourceDir string) (cssh.AuthMethod, error) {
@@ -101,7 +85,7 @@ type sshTunnel struct {
 	config *cssh.ClientConfig
 }
 
-func (tunnel *sshTunnel) Start() error {
+func (tunnel *sshTunnel) start() error {
 	listener, err := net.Listen("tcp", tunnel.local.String())
 	if err != nil {
 		return err
@@ -134,6 +118,6 @@ func (tunnel *sshTunnel) forward(localConn net.Conn) {
 
 func handleError(err error, msg string) {
 	if err != nil {
-		log.Fatalf("%s: %s\n", msg, err)
+		logger.Fatalf("%s: %s\n", msg, err)
 	}
 }

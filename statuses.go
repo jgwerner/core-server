@@ -1,21 +1,19 @@
-package core
+package main
 
-import (
-	"log"
-
-	"github.com/garyburd/redigo/redis"
-)
+import "github.com/3Blades/go-sdk/client/projects"
 
 // SetStatus writes server status in redis cache
-func SetStatus(redisURL, status, serverStateKey string) {
-	conn, err := redis.DialURL(redisURL)
+func SetStatus(args *Args, status string) {
+	cli := APIClient(args.ApiRoot, args.ApiKey)
+	params := projects.NewProjectsServersPartialUpdateParams()
+	params.SetNamespace(args.Namespace)
+	params.SetProjectPk(args.ProjectID)
+	params.SetID(args.ServerID)
+	params.SetData(projects.ProjectsServersPartialUpdateBody{
+		Status: status,
+	})
+	_, err := cli.Projects.ProjectsServersPartialUpdate(params)
 	if err != nil {
-		log.Printf("Redis connection error: %s", err)
-		return
-	}
-	defer conn.Close()
-	_, err = conn.Do("HSET", serverStateKey, "status", status)
-	if err != nil {
-		log.Printf("Set status error: %s", err)
+		logger.Println("[SetStatus]", err)
 	}
 }

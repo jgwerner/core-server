@@ -1,7 +1,8 @@
-package core
+package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -10,8 +11,6 @@ import (
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/docker/distribution/context"
 )
 
 func TestRequest_DataString(t *testing.T) {

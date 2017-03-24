@@ -1,22 +1,76 @@
-package core
+package main
 
 import (
+	"encoding/json"
 	"errors"
+	"strings"
 
-	"github.com/speps/go-hashids"
+	apiclient "github.com/3Blades/go-sdk/client"
+	"github.com/3Blades/go-sdk/client/projects"
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
 )
 
-// DecodeHashID decodes hashID to int
-func DecodeHashID(salt, hashID string) (int, error) {
-	hd := hashids.NewData()
-	hd.MinLength = 8
-	hd.Salt = salt
-	ids, err := hashids.NewWithData(hd).DecodeWithError(hashID)
+type Args struct {
+	ApiKey      string
+	ApiRoot     string
+	ResourceDir string
+	ServerType  string
+	Namespace   string
+	ProjectID   string
+	ServerID    string
+	Code        string
+	KernelName  string
+}
+
+func APIClient(apiRoot, token string) *apiclient.Threeblades {
+	transport := httptransport.New(apiRoot, "", []string{"http"})
+	transport.DefaultAuthentication = httptransport.APIKeyAuth("AUTHORIZATION", "header",
+		"Token "+token)
+	return apiclient.New(transport, strfmt.Default)
+}
+
+func validateJSON(s []byte) bool {
+	var js map[string]interface{}
+	return json.Unmarshal(s, &js) == nil
+}
+
+func checkToken(apiRoot, tokenHeader string) bool {
+	if tokenHeader == "" {
+		return false
+	}
+	token, err := getTokenFromHeader(tokenHeader)
 	if err != nil {
-		return 0, err
+		logger.Printf("Error getting token from header: %s", err.Error())
+		return false
 	}
-	if len(ids) == 0 {
-		return 0, errors.New("No id for hash")
+	cli := APIClient(apiRoot, token)
+	params := projects.NewProjectsServersIsAllowedListParams()
+	params.SetNamespace(args.Namespace)
+	params.SetProjectPk(args.ProjectID)
+	params.SetServerPk(args.ServerID)
+	_, err = cli.Projects.ProjectsServersIsAllowedList(params)
+	if err != nil {
+		return false
 	}
-	return ids[0], nil
+	return true
+}
+
+func getTokenFromHeader(header string) (string, error) {
+	ok := strings.Contains(header, "Token")
+	if !ok {
+		return "", errors.New("No token")
+	}
+	return header[len(header)-40:], nil
+}
+
+func getRunner(serverType string) Runner {
+	switch serverType {
+	case "http":
+		return &RunHTTP{}
+	case "periodic":
+		return &RunCode{}
+	default:
+		return &RunGeneric{}
+	}
 }

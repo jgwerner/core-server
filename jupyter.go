@@ -1,8 +1,10 @@
-package core
+package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/satori/go.uuid"
@@ -74,16 +77,28 @@ func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
 }
 
 // Run sends code to jupyter kernel for processing
-func Run(code string) (chan string, chan string) {
+func Run(ctx context.Context, stats *Stats, code string) (string, error) {
 	ws := dialKernelWebSocket()
 	err := websocket.JSON.Send(ws, createExecuteMsg(code))
 	if err != nil {
-		log.Fatalf("Error sending request to websocket: %s", err)
+		return "", err
 	}
 	respCh := make(chan string)
 	errCh := make(chan string)
 	go handleWebSocket(ws, respCh, errCh)
-	return respCh, errCh
+	var data string
+	stats.Start = time.Now().UTC()
+	select {
+	case data = <-respCh:
+		stats.ExitCode = 0
+		data = strings.Trim(data, "'")
+	case data = <-errCh:
+		stats.ExitCode = 1
+		err = errors.New("Script error")
+	case <-ctx.Done():
+	}
+	stats.Stop = time.Now().UTC()
+	return data, err
 }
 
 // SetKernelName sets currentKernel name

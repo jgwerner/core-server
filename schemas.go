@@ -1,4 +1,4 @@
-package core
+package main
 
 import (
 	"bytes"
@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -45,7 +44,7 @@ type Request struct {
 // UnmarshalJSON implements custom json unmarshalling with validation
 // TODO: separate validation
 func (r *Request) UnmarshalJSON(data []byte) error {
-	log.Printf("Request: %s", data)
+	logger.Printf("Request: %s", data)
 	tmp := make(map[string]interface{})
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
@@ -178,9 +177,9 @@ func (sr *Response) MarshalJSON() ([]byte, error) {
 	}
 	resp, err := json.Marshal(&struct{ *ResponseAlias }{(*ResponseAlias)(sr)})
 	if err != nil {
-		log.Printf("Error encoding response: %s\n%s", err, sr)
+		logger.Printf("Error encoding response: %s\n%s", err, sr)
 	}
-	log.Printf("Response: %s", resp)
+	logger.Printf("Response: %s", resp)
 	return resp, err
 }
 
@@ -209,7 +208,7 @@ func BuildRequest(r io.Reader) (*Request, error) {
 		if err == io.EOF {
 			return nil, errors.New("received empty request")
 		}
-		return nil, errors.New("Request doesn't comply with schema")
+		return nil, err
 	}
 	return &request, nil
 }

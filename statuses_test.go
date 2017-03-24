@@ -1,26 +1,47 @@
-package core
+package main
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
 	"testing"
-
-	"github.com/garyburd/redigo/redis"
 )
 
+func mockAPIServer(h http.Handler) (*httptest.Server, *Args) {
+	ts := httptest.NewServer(h)
+	apiRoot, _ := url.Parse(ts.URL)
+	args := &Args{
+		ApiRoot: fmt.Sprintf("%s:%s", apiRoot.Hostname(), apiRoot.Port()),
+	}
+	return ts, args
+}
+
+func mockAPIHandler(data io.Reader) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		io.Copy(w, data)
+	})
+}
+
+func mockAPI(data string) (*httptest.Server, *Args) {
+	return mockAPIServer(mockAPIHandler(bytes.NewBufferString(data)))
+}
+
 func TestSetStatus(t *testing.T) {
-	redisURL := "redis://localhost:6379/0"
-	serverStateKey := "server_state_hashid"
-	conn, err := redis.DialURL(redisURL)
-	if err != nil {
-		t.Errorf("Redis connection error: %s", err)
-	}
-	defer conn.Close()
-	status := "Test"
-	SetStatus(redisURL, status, serverStateKey)
-	resp, err := redis.String(conn.Do("HGET", serverStateKey, "status"))
-	if err != nil {
-		t.Error("Error retrieving status")
-	}
-	if resp != status {
-		t.Errorf("Wrong status.\nExpected: %s\nActual: %s", status, resp)
+	ts, args := mockAPI(`{"status": "Stopped"}`)
+	defer ts.Close()
+	status := "Running"
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	SetStatus(args, status)
+	log.SetOutput(os.Stderr)
+	if buf.Len() > 0 {
+		log.Println(buf.String())
+		t.Error("Error during status change")
 	}
 }
