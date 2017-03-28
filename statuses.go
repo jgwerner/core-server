@@ -10,7 +10,8 @@ func SetStatus(args *Args, status string) {
 	params.SetProjectPk(args.ProjectID)
 	params.SetID(args.ServerID)
 	params.SetData(projects.ProjectsServersPartialUpdateBody{
-		Status: status,
+		Status:    status,
+		Connected: []string{},
 	})
 	_, err := cli.Projects.ProjectsServersPartialUpdate(params)
 	if err != nil {

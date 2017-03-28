@@ -1,4 +1,4 @@
-FROM 3blades/core-server
+FROM core-server
 
 RUN apt-get update && \
     apt-get install -yq --no-install-recommends \
@@ -18,5 +18,7 @@ RUN pip3 install \
 
 WORKDIR /
 
+ENV KERNEL_NAME python3
+ENV SERVER_TYPE http
 
 COPY runner /
