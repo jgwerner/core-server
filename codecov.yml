@@ -1,0 +1,35 @@
+codecov:
+  branch: master
+  bot: null
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  notify:
+    slack:
+      default:
+        url: https://hooks.slack.com/services/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
+        branches: master
+        attachments: "sunburst, diff"
+
+  status:
+    project:
+      default:
+        target: auto
+        branches: master
+
+    patch:
+      default:
+        target: auto
+        branches: master
+
+    changes:
+      default:
+        branches: master
+
+comment:
+  layout: "header, diff, changes, sunburst, uncovered, tree"
+  branches: master
+  behavior: default
