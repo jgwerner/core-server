@@ -1,4 +1,4 @@
-FROM core-server
+FROM 3blades/core-server
 
 RUN apt-get update && \
     apt-get install -yq --no-install-recommends \
