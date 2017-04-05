@@ -80,7 +80,6 @@ func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
 
 // Run sends code to jupyter kernel for processing
 func Run(ctx context.Context, stats *Stats, script, function string) (string, error) {
-	log.Println(script, function)
 	ws := dialKernelWebSocket()
 	respCh := make(chan string)
 	errCh := make(chan string)
@@ -197,7 +196,6 @@ func handleWebSocket(ws *websocket.Conn, respCh chan string, errCh chan string) 
 
 // handleResponseMsg handles required types of jupyter messages
 func handleResponseMsg(respMsg *msg, resp chan string, errCh chan string) {
-	log.Println(respMsg)
 	var err error
 	switch respMsg.Header.MsgType {
 	case "display_data", "execute_result":
