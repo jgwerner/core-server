@@ -18,6 +18,6 @@ RUN pip install \
 
 WORKDIR /
 
-ENV KERNEL_NAME, python
+ENV KERNEL_NAME python
 
 COPY runner /
