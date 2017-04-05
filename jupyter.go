@@ -7,11 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -77,15 +79,24 @@ func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
 }
 
 // Run sends code to jupyter kernel for processing
-func Run(ctx context.Context, stats *Stats, code string) (string, error) {
+func Run(ctx context.Context, stats *Stats, script, function string) (string, error) {
+	log.Println(script, function)
 	ws := dialKernelWebSocket()
-	err := websocket.JSON.Send(ws, createExecuteMsg(code))
-	if err != nil {
-		return "", err
-	}
 	respCh := make(chan string)
 	errCh := make(chan string)
 	go handleWebSocket(ws, respCh, errCh)
+	scriptContent, err := scriptContent(script)
+	if err != nil {
+		return "", err
+	}
+	err = websocket.JSON.Send(ws, createExecuteMsg(scriptContent))
+	if err != nil {
+		return "", err
+	}
+	err = websocket.JSON.Send(ws, createExecuteMsg(function))
+	if err != nil {
+		return "", err
+	}
 	var data string
 	stats.Start = time.Now().UTC()
 	select {
@@ -95,10 +106,20 @@ func Run(ctx context.Context, stats *Stats, code string) (string, error) {
 	case data = <-errCh:
 		stats.ExitCode = 1
 		err = errors.New("Script error")
+		break
 	case <-ctx.Done():
 	}
 	stats.Stop = time.Now().UTC()
 	return data, err
+}
+
+func scriptContent(script string) (string, error) {
+	path := filepath.Join(args.ResourceDir, script)
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 // SetKernelName sets currentKernel name
@@ -176,6 +197,7 @@ func handleWebSocket(ws *websocket.Conn, respCh chan string, errCh chan string) 
 
 // handleResponseMsg handles required types of jupyter messages
 func handleResponseMsg(respMsg *msg, resp chan string, errCh chan string) {
+	log.Println(respMsg)
 	var err error
 	switch respMsg.Header.MsgType {
 	case "display_data", "execute_result":

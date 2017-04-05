@@ -17,6 +17,8 @@ const requestTimeout = 30 * time.Second
 type RunHTTP struct{}
 
 func (rh *RunHTTP) Run() error {
+	RunKernelGateway(out, out, args.KernelName)
+	GetKernel()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ScriptHandler)
 	server := &http.Server{
@@ -53,8 +55,9 @@ func ScriptHandler(w http.ResponseWriter, r *http.Request) {
 	resp := CreateResponseFromRequest(requestData)
 	stats := NewStats()
 	re := regexp.MustCompile(`\r?\n`)
-	code := re.ReplaceAllString(fmt.Sprintf(args.Code, requestData), "")
-	data, err := Run(ctx, stats, code)
+	rawCode := fmt.Sprintf(`%s('%s')`, args.Function, requestData.DataString())
+	code := re.ReplaceAllString(rawCode, "")
+	data, err := Run(ctx, stats, args.Script, code)
 	if err != nil {
 		appErr := AppError{
 			Err:        err,
