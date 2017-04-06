@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -58,13 +57,26 @@ type kernel struct {
 	ID   string `json:"id,omitempty"`
 }
 
+func isJupyterRunning() bool {
+	_, err := http.Get(fmt.Sprintf("%s/api", baseURI))
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 // RunKernelGateway runs jupyter kernel gateway
 // https://github.com/jupyter/kernel_gateway
 func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
+	if isJupyterRunning() {
+		return
+	}
 	currentKernel.Name = kernelName
 	cmd := exec.Command(
 		"jupyter",
+		"--NotebookApp.token=''",
 		"kernelgateway",
+		"--JupyterWebsocketPersonality.list_kernels=True",
 	)
 	cmd.Stderr = stdout
 	cmd.Stdout = stderr
@@ -126,18 +138,39 @@ func SetKernelName(name string) {
 	currentKernel.Name = name
 }
 
-// GetKernel gets kernel id by name and starts kernel process
-func GetKernel() {
+func getKernelUri() string {
+	return fmt.Sprintf(`%s/api/kernels`, baseURI)
+}
+
+func isKernelRunning(name string) bool {
+	uri := getKernelUri()
+	resp, err := http.Get(uri)
+	if err != nil {
+		return false
+	}
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	runningKernels := []kernel{}
+	err = json.NewDecoder(resp.Body).Decode(&runningKernels)
+	if err != nil {
+		return false
+	}
+	for _, kernel := range runningKernels {
+		if kernel.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func startKernel(k *kernel) {
 	var body bytes.Buffer
-	json.NewEncoder(&body).Encode(&currentKernel)
-	credentials := url.Values{}
-	credentials.Set("auth_username", "fakeuser")
-	credentials.Set("auth_password", "fakepass")
-	uri, _ := url.Parse(fmt.Sprintf(`%s/api/kernels`, baseURI))
-	uri.RawQuery = credentials.Encode()
+	json.NewEncoder(&body).Encode(k)
+	uri := getKernelUri()
 	// TODO: this could be handled better
 	time.Sleep(2 * time.Second)
-	response, err := http.Post(uri.String(), "application/json", &body)
+	response, err := http.Post(uri, "application/json", &body)
 	if err != nil {
 		log.Println(err)
 		return
@@ -148,6 +181,13 @@ func GetKernel() {
 	err = json.NewDecoder(response.Body).Decode(&currentKernel)
 	if err != nil {
 		log.Printf("Error decoding kernel: %s", err)
+	}
+}
+
+// GetKernel gets kernel id by name and starts kernel process
+func GetKernel() {
+	if !isKernelRunning(currentKernel.Name) {
+		startKernel(&currentKernel)
 	}
 }
 

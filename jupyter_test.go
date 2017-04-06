@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
@@ -31,13 +33,19 @@ func TestGetKernel(t *testing.T) {
 	}
 }
 
+func prepareScript(code string) error {
+	args.ResourceDir = "/tmp"
+	args.Script = "test.py"
+	scriptPath := filepath.Join(args.ResourceDir, args.Script)
+	return ioutil.WriteFile(scriptPath, []byte(code), 0644)
+}
+
 func TestRun_Success(t *testing.T) {
 	expected := `{'test': 1}`
-	code := fmt.Sprintf(`def test():
-	return %s
-test()`, expected)
+	code := fmt.Sprintf("def test():\n\treturn %s", expected)
+	prepareScript(code)
 	stats := NewStats()
-	data, _ := Run(context.Background(), stats, code)
+	data, _ := Run(context.Background(), stats, args.Script, `test()`)
 	if data != expected {
 		t.Errorf("Wrong data\nExpected: %s\nActual: %s\n", expected, data)
 	}
@@ -61,17 +69,19 @@ def test():
 	sys.stderr.write('%s')
 	return '{}'
 test()`, stdoutMsg, stderrMsg)
+	prepareScript(code)
 	go assert(os.Stdout, stdoutMsg)
 	go assert(os.Stdout, stderrMsg)
 	stats := NewStats()
-	Run(context.Background(), stats, code)
+	Run(context.Background(), stats, args.Script, `test()`)
 
 }
 
 func TestRun_Fail(t *testing.T) {
 	code := `test1`
+	prepareScript(code)
 	stats := NewStats()
-	data, err := Run(context.Background(), stats, code)
+	data, err := Run(context.Background(), stats, args.Script, `test()`)
 	if err == nil {
 		t.Error("No error with bad data")
 	}
