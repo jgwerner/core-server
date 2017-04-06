@@ -138,7 +138,7 @@ func SetKernelName(name string) {
 	currentKernel.Name = name
 }
 
-func getKernelUri() string {
+func getKernelURI() string {
 	return fmt.Sprintf(`%s/api/kernels`, baseURI)
 }
 
