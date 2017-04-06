@@ -143,7 +143,7 @@ func getKernelURI() string {
 }
 
 func isKernelRunning(name string) bool {
-	uri := getKernelUri()
+	uri := getKernelURI()
 	resp, err := http.Get(uri)
 	if err != nil {
 		return false
@@ -167,7 +167,7 @@ func isKernelRunning(name string) bool {
 func startKernel(k *kernel) {
 	var body bytes.Buffer
 	json.NewEncoder(&body).Encode(k)
-	uri := getKernelUri()
+	uri := getKernelURI()
 	// TODO: this could be handled better
 	time.Sleep(2 * time.Second)
 	response, err := http.Post(uri, "application/json", &body)
