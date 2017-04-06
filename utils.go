@@ -19,8 +19,9 @@ type Args struct {
 	Namespace   string
 	ProjectID   string
 	ServerID    string
-	Code        string
 	KernelName  string
+	Script      string
+	Function    string
 }
 
 func APIClient(apiRoot, token string) *apiclient.Threeblades {
@@ -66,9 +67,9 @@ func getTokenFromHeader(header string) (string, error) {
 
 func getRunner(serverType string) Runner {
 	switch serverType {
-	case "http":
+	case "restful":
 		return &RunHTTP{}
-	case "periodic":
+	case "cron":
 		return &RunCode{}
 	default:
 		return &RunGeneric{}

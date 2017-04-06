@@ -7,11 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -56,13 +57,26 @@ type kernel struct {
 	ID   string `json:"id,omitempty"`
 }
 
+func isJupyterRunning() bool {
+	_, err := http.Get(fmt.Sprintf("%s/api", baseURI))
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 // RunKernelGateway runs jupyter kernel gateway
 // https://github.com/jupyter/kernel_gateway
 func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
+	if isJupyterRunning() {
+		return
+	}
 	currentKernel.Name = kernelName
 	cmd := exec.Command(
 		"jupyter",
+		"--NotebookApp.token=''",
 		"kernelgateway",
+		"--JupyterWebsocketPersonality.list_kernels=True",
 	)
 	cmd.Stderr = stdout
 	cmd.Stdout = stderr
@@ -77,15 +91,23 @@ func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
 }
 
 // Run sends code to jupyter kernel for processing
-func Run(ctx context.Context, stats *Stats, code string) (string, error) {
+func Run(ctx context.Context, stats *Stats, script, function string) (string, error) {
 	ws := dialKernelWebSocket()
-	err := websocket.JSON.Send(ws, createExecuteMsg(code))
-	if err != nil {
-		return "", err
-	}
 	respCh := make(chan string)
 	errCh := make(chan string)
 	go handleWebSocket(ws, respCh, errCh)
+	scriptContent, err := scriptContent(script)
+	if err != nil {
+		return "", err
+	}
+	err = websocket.JSON.Send(ws, createExecuteMsg(scriptContent))
+	if err != nil {
+		return "", err
+	}
+	err = websocket.JSON.Send(ws, createExecuteMsg(function))
+	if err != nil {
+		return "", err
+	}
 	var data string
 	stats.Start = time.Now().UTC()
 	select {
@@ -95,10 +117,20 @@ func Run(ctx context.Context, stats *Stats, code string) (string, error) {
 	case data = <-errCh:
 		stats.ExitCode = 1
 		err = errors.New("Script error")
+		break
 	case <-ctx.Done():
 	}
 	stats.Stop = time.Now().UTC()
 	return data, err
+}
+
+func scriptContent(script string) (string, error) {
+	path := filepath.Join(args.ResourceDir, script)
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 // SetKernelName sets currentKernel name
@@ -106,18 +138,39 @@ func SetKernelName(name string) {
 	currentKernel.Name = name
 }
 
-// GetKernel gets kernel id by name and starts kernel process
-func GetKernel() {
+func getKernelURI() string {
+	return fmt.Sprintf(`%s/api/kernels`, baseURI)
+}
+
+func isKernelRunning(name string) bool {
+	uri := getKernelURI()
+	resp, err := http.Get(uri)
+	if err != nil {
+		return false
+	}
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	runningKernels := []kernel{}
+	err = json.NewDecoder(resp.Body).Decode(&runningKernels)
+	if err != nil {
+		return false
+	}
+	for _, kernel := range runningKernels {
+		if kernel.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func startKernel(k *kernel) {
 	var body bytes.Buffer
-	json.NewEncoder(&body).Encode(&currentKernel)
-	credentials := url.Values{}
-	credentials.Set("auth_username", "fakeuser")
-	credentials.Set("auth_password", "fakepass")
-	uri, _ := url.Parse(fmt.Sprintf(`%s/api/kernels`, baseURI))
-	uri.RawQuery = credentials.Encode()
+	json.NewEncoder(&body).Encode(k)
+	uri := getKernelURI()
 	// TODO: this could be handled better
 	time.Sleep(2 * time.Second)
-	response, err := http.Post(uri.String(), "application/json", &body)
+	response, err := http.Post(uri, "application/json", &body)
 	if err != nil {
 		log.Println(err)
 		return
@@ -128,6 +181,13 @@ func GetKernel() {
 	err = json.NewDecoder(response.Body).Decode(&currentKernel)
 	if err != nil {
 		log.Printf("Error decoding kernel: %s", err)
+	}
+}
+
+// GetKernel gets kernel id by name and starts kernel process
+func GetKernel() {
+	if !isKernelRunning(currentKernel.Name) {
+		startKernel(&currentKernel)
 	}
 }
 

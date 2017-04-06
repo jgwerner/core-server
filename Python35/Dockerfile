@@ -18,5 +18,7 @@ RUN pip3 install \
 
 WORKDIR /
 
+ENV KERNEL_NAME python3
+ENV SERVER_TYPE http
 
 COPY runner /

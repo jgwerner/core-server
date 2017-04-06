@@ -42,6 +42,7 @@ RUN mv spark-${APACHE_SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} spark
 ENV SPARK_HOME=/spark
 ENV PATH=$SPARK_HOME/bin:$PATH
 ENV PYTHONPATH $SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.3-src.zip
+ENV KERNEL_NAME python
 
 WORKDIR /
 

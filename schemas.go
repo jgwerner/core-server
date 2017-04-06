@@ -35,84 +35,15 @@ func (re *requestError) Error() string {
 
 // Request represents user request
 type Request struct {
-	SchemaVersion string                 `json:"schema_version"`
-	ModelVersion  string                 `json:"model_version"`
-	Timestamp     time.Time              `json:"timestamp"`
-	Data          map[string]interface{} `json:"data"`
-}
-
-// UnmarshalJSON implements custom json unmarshalling with validation
-// TODO: separate validation
-func (r *Request) UnmarshalJSON(data []byte) error {
-	logger.Printf("Request: %s", data)
-	tmp := make(map[string]interface{})
-	err := json.Unmarshal(data, &tmp)
-	if err != nil {
-		return err
-	}
-	rerr := &requestError{}
-	raise := false
-	if v, ok := tmp["schema_version"]; ok {
-		r.SchemaVersion = v.(string)
-		delete(tmp, "schema_version")
-	} else {
-		rerr.SchemaVersionError = "No schema version"
-		raise = true
-	}
-	if v, ok := tmp["model_version"]; ok {
-		r.ModelVersion = v.(string)
-		delete(tmp, "model_version")
-	} else {
-		rerr.ModelVersionError = "No model version"
-		raise = true
-	}
-	if v, ok := tmp["timestamp"]; ok {
-		tt, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			rerr.TimestampError = "Wrong timestamp format, use RFC3339"
-			raise = true
-		}
-		r.Timestamp = tt
-		delete(tmp, "timestamp")
-	} else {
-		rerr.TimestampError = "No timestamp"
-		raise = true
-	}
-	if v, ok := tmp["data"]; ok {
-		r.Data = v.(map[string]interface{})
-		delete(tmp, "data")
-	}
-	for k := range tmp {
-		rerr.UnknownFields = append(rerr.UnknownFields, k)
-	}
-	if len(rerr.UnknownFields) > 0 {
-		raise = true
-	}
-	if !schemaVersions[r.SchemaVersion] {
-		rerr.SchemaVersionError = "Wrong schema version"
-		raise = true
-	}
-	if !modelVersions[r.ModelVersion] {
-		rerr.ModelVersionError = "Wrong model version"
-		raise = true
-	}
-	if raise {
-		return rerr
-	}
-	return nil
+	SchemaVersion string          `json:"schema_version"`
+	ModelVersion  string          `json:"model_version"`
+	Timestamp     time.Time       `json:"timestamp"`
+	Data          json.RawMessage `json:"data"`
 }
 
 // DataString encodes request data to string
 func (r *Request) DataString() string {
-	if len(r.Data) == 0 {
-		return ""
-	}
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(r.Data)
-	if err != nil {
-		return ""
-	}
-	return buf.String()
+	return string(r.Data)
 }
 
 // AppError is main app error type
