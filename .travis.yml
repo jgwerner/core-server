@@ -24,6 +24,7 @@ before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - pip install --user jupyter_kernel_gateway
 script:
+  - make test
   - make
   - docker --version  # document the version travis is using
   - export PATH=$PATH:$HOME/.local/bin # put aws in the path
