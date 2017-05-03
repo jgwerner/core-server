@@ -49,7 +49,7 @@ func checkToken(apiRoot, tokenHeader string) bool {
 	params := projects.NewProjectsServersIsAllowedListParams()
 	params.SetNamespace(args.Namespace)
 	params.SetProjectPk(args.ProjectID)
-	params.SetServerPk(args.ServerID)
+	params.SetID(args.ServerID)
 	_, err = cli.Projects.ProjectsServersIsAllowedList(params)
 	if err != nil {
 		return false

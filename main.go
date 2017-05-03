@@ -44,8 +44,7 @@ func main() {
 	}
 	err = CreateSSHTunnels(args)
 	if err != nil {
-		go SetStatus(args, "Error")
-		logger.Fatalf("[SSH tunnel]: %s", err)
+		logger.Printf("[SSH tunnel]: %s", err)
 	}
 	go SetStatus(args, "Running")
 	logger.Fatal(getRunner(args.ServerType).Run())
