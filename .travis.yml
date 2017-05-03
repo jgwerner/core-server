@@ -1,7 +1,7 @@
 # whitelist
 language: go
 go:
-  - 1.7.4
+  - 1.8.1
 branches:
   only:
     - master
@@ -28,4 +28,4 @@ after_script:
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 notifications:
-  - slack: 3blades:WkvRG9pgF8jIOpq8i8BjRqy3
+  slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
