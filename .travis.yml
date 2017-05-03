@@ -9,10 +9,6 @@ sudo: required
 services:
 #Enable docker service inside travis
   - docker
-  - postgresql
-  - redis-server
-env:
-  - DATABASE_URL="postgres://postgres:@localhost:5432/travis_ci_test?sslmode=disable"
 before_install:
   - sudo apt-get update
   - sudo apt-get install -yq python3
@@ -21,8 +17,7 @@ before_install:
   - go get -t -v ./...
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
-  - pip install --user jupyter_kernel_gateway
+  - sudo pip3 install jupyter_kernel_gateway
 script:
   - make test
   - make
