@@ -14,8 +14,8 @@ before_install:
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-before_script:
-  - sudo pip install jupyter_kernel_gateway
+install:
+  - pip install jupyter_kernel_gateway
 script:
   - make test
   - make
