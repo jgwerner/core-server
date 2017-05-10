@@ -34,18 +34,15 @@ func main() {
 	SetKernelName(args.KernelName)
 	err := os.Chdir(args.ResourceDir)
 	if err != nil {
-		go SetStatus(args, "Error")
 		logger.Fatal(err)
 	}
 	err = StartScript()
 	if err != nil {
-		go SetStatus(args, "Error")
 		logger.Fatalf("[StartScript]: %s", err)
 	}
 	err = CreateSSHTunnels(args)
 	if err != nil {
 		logger.Printf("[SSH tunnel]: %s", err)
 	}
-	go SetStatus(args, "Running")
 	logger.Fatal(getRunner(args.ServerType).Run())
 }
