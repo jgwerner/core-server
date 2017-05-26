@@ -21,13 +21,11 @@ func (rg *RunGeneric) Run() error {
 	}
 	err := os.Chdir(args.ResourceDir)
 	if err != nil {
-		go SetStatus(args, "Error")
 		return err
 	}
 	cmd := exec.Command(rg.command, rg.args...)
 	cmd.Stdout = out
 	cmd.Stderr = out
-	go SetStatus(args, "Running")
 	return cmd.Run()
 }
 
