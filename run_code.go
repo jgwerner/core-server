@@ -13,7 +13,7 @@ func (rp *RunCode) Run() error {
 	stats := NewStats()
 	_, err := Run(context.Background(), stats, args.Script, fmt.Sprintf("%s()", args.Function))
 	if err != nil {
-		SetStatus(args, "Error")
+		return err
 	}
 	stats.Send(args)
 	return err
