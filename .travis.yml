@@ -1,7 +1,7 @@
 # whitelist
 language: go
 go:
-  - 1.8.1
+  - 1.8.3
 branches:
   only:
     - master
@@ -16,7 +16,7 @@ before_install:
   - go get -t -v ./...
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 install:
-  - pip3 install jupyter_kernel_gateway
+  - pip3 install jupyter_kernel_gateway==1.2.2
 script:
   - make test
   - make
