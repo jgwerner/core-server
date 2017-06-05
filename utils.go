@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	apiclient "github.com/3Blades/go-sdk/client"
-	"github.com/3Blades/go-sdk/client/projects"
+	"github.com/3Blades/go-sdk/client/auth"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 )
@@ -46,11 +46,8 @@ func checkToken(apiRoot, tokenHeader string) bool {
 		return false
 	}
 	cli := APIClient(apiRoot, token)
-	params := projects.NewProjectsServersIsAllowedListParams()
-	params.SetNamespace(args.Namespace)
-	params.SetProjectPk(args.ProjectID)
-	params.SetID(args.ServerID)
-	_, err = cli.Projects.ProjectsServersIsAllowedList(params)
+	params := auth.NewAuthJwtTokenVerifyCreateParams()
+	_, err = cli.Auth.AuthJwtTokenVerifyCreate(params)
 	if err != nil {
 		return false
 	}
