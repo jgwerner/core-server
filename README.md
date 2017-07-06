@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c0c64938c02a402f9d8280cf2ecc23d4)](https://www.codacy.com/app/3Blades/core-server?utm_source=github.com&utm_medium=referral&utm_content=3Blades/core-server&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/3Blades/core-server.svg?branch=master)](https://travis-ci.org/3Blades/core-server)
 [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://registry.hub.docker.com/u/3blades/core-server)
 [![codecov](https://codecov.io/gh/3Blades/core-server/branch/master/graph/badge.svg)](https://codecov.io/gh/3Blades/core-server)
