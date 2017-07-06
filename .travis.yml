@@ -24,8 +24,7 @@ script:
   - export PATH=$PATH:$HOME/.local/bin # put aws in the path
 after_script:
   #build core-server and push to dockerhub
-  - docker build -t 3blades/core-server .
-  - docker push 3blades/core-server:latest
+  - bash config/buildDockerImage.sh
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 notifications:
