@@ -29,3 +29,6 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 notifications:
   slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
+env:
+  env:
+  - $DOCKER_IMAGE_NAME="3blades/core-server"
