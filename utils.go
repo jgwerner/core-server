@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	apiclient "github.com/3Blades/go-sdk/client"
 	"github.com/3Blades/go-sdk/client/auth"
+	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 )
@@ -24,11 +26,19 @@ type Args struct {
 	Function    string
 }
 
-func APIClient(apiRoot, token string) *apiclient.Threeblades {
+type APIClient struct {
+	*apiclient.Threeblades
+	AuthInfo runtime.ClientAuthInfoWriterFunc
+}
+
+func NewAPIClient(apiRoot, token string) *APIClient {
 	transport := httptransport.New(apiRoot, "", []string{"http"})
-	transport.DefaultAuthentication = httptransport.APIKeyAuth("AUTHORIZATION", "header",
-		"Token "+token)
-	return apiclient.New(transport, strfmt.Default)
+	cli := apiclient.New(transport, strfmt.Default)
+	return &APIClient{cli, AuthInfo}
+}
+
+func AuthInfo(req runtime.ClientRequest, reg strfmt.Registry) error {
+	return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer %s", args.ApiKey))
 }
 
 func validateJSON(s []byte) bool {
@@ -45,9 +55,9 @@ func checkToken(apiRoot, tokenHeader string) bool {
 		logger.Printf("Error getting token from header: %s", err.Error())
 		return false
 	}
-	cli := APIClient(apiRoot, token)
-	params := auth.NewAuthJwtTokenVerifyCreateParams()
-	_, err = cli.Auth.AuthJwtTokenVerifyCreate(params)
+	cli := NewAPIClient(apiRoot, token)
+	params := auth.NewAuthJwtTokenVerifyParams()
+	_, err = cli.Auth.AuthJwtTokenVerify(params)
 	if err != nil {
 		return false
 	}
