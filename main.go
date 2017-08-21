@@ -2,19 +2,18 @@ package main
 
 import (
 	"flag"
-	"io"
 	"log"
 	"os"
 )
 
 var (
-	out    io.Writer = os.Stderr
-	logger           = log.New(out, "", log.Lshortfile)
-	args             = &Args{}
+	out    = os.Stderr
+	logger = log.New(out, "", log.Lshortfile)
+	args   = &Args{}
 )
 
 func main() {
-	args.ResourceDir = "/resources"
+	args.ResourceDir = "/"
 	flag.StringVar(&args.ApiKey, "key", "", "Api Key")
 	flag.StringVar(&args.Namespace, "ns", "", "Namespace")
 	flag.StringVar(&args.ProjectID, "projectID", "", "Project id")

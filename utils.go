@@ -76,6 +76,8 @@ func getRunner(serverType string) Runner {
 	switch serverType {
 	case "restful":
 		return &RunHTTP{}
+	case "proxy":
+		return &RunProxy{&RunGeneric{}}
 	case "cron":
 		return &RunCode{}
 	default:

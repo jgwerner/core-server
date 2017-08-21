@@ -16,9 +16,7 @@ type RunGeneric struct {
 }
 
 func (rg *RunGeneric) Run() error {
-	if rg.command == "" {
-		rg.commandArgs()
-	}
+	rg.commandArgs()
 	err := os.Chdir(args.ResourceDir)
 	if err != nil {
 		return err
