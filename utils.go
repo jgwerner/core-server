@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	apiclient "github.com/3Blades/go-sdk/client"
-	"github.com/3Blades/go-sdk/client/auth"
+	"github.com/3Blades/go-sdk/client/projects"
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -18,6 +19,7 @@ type Args struct {
 	ApiRoot     string
 	ResourceDir string
 	ServerType  string
+	Version     string
 	Namespace   string
 	ProjectID   string
 	ServerID    string
@@ -34,11 +36,14 @@ type APIClient struct {
 func NewAPIClient(apiRoot, token string) *APIClient {
 	transport := httptransport.New(apiRoot, "", []string{"http"})
 	cli := apiclient.New(transport, strfmt.Default)
-	return &APIClient{cli, AuthInfo}
+	authInfo := CreateAuthInfo(args.ApiKey)
+	return &APIClient{cli, authInfo}
 }
 
-func AuthInfo(req runtime.ClientRequest, reg strfmt.Registry) error {
-	return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer %s", args.ApiKey))
+func CreateAuthInfo(token string) runtime.ClientAuthInfoWriterFunc {
+	return runtime.ClientAuthInfoWriterFunc(func(req runtime.ClientRequest, reg strfmt.Registry) error {
+		return req.SetHeaderParam("AUTHORIZATION", fmt.Sprintf("Bearer %s", token))
+	})
 }
 
 func validateJSON(s []byte) bool {
@@ -46,30 +51,30 @@ func validateJSON(s []byte) bool {
 	return json.Unmarshal(s, &js) == nil
 }
 
-func checkToken(apiRoot, tokenHeader string) bool {
-	if tokenHeader == "" {
-		return false
-	}
-	token, err := getTokenFromHeader(tokenHeader)
-	if err != nil {
-		logger.Printf("Error getting token from header: %s", err.Error())
+func checkToken(apiRoot, token string) bool {
+	if token == "" {
 		return false
 	}
 	cli := NewAPIClient(apiRoot, token)
-	params := auth.NewAuthJwtTokenVerifyParams()
-	_, err = cli.Auth.AuthJwtTokenVerify(params)
+	params := projects.NewProjectsServersAuthParams()
+	params.SetNamespace(args.Namespace)
+	params.SetProjectID(args.ProjectID)
+	params.SetID(args.ServerID)
+	authInfo := CreateAuthInfo(token)
+	_, err := cli.Projects.ProjectsServersAuth(params, authInfo)
 	if err != nil {
+		log.Println(err)
 		return false
 	}
 	return true
 }
 
 func getTokenFromHeader(header string) (string, error) {
-	ok := strings.Contains(header, "Token")
+	ok := strings.Contains(header, "Bearer")
 	if !ok {
 		return "", errors.New("No token")
 	}
-	return header[len(header)-40:], nil
+	return strings.Split(header, " ")[1], nil
 }
 
 func getRunner(serverType string) Runner {
