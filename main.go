@@ -2,14 +2,15 @@ package main
 
 import (
 	"flag"
+	"io"
 	"log"
 	"os"
 )
 
 var (
-	out    = os.Stderr
-	logger = log.New(out, "", log.Lshortfile)
-	args   = &Args{}
+	out    io.Writer = os.Stderr
+	logger           = log.New(out, "", log.Lshortfile)
+	args             = &Args{}
 )
 
 func main() {

@@ -29,6 +29,8 @@ func (rg *RunGeneric) Run() error {
 
 func (rg *RunGeneric) commandArgs() {
 	fargs := flag.Args()
-	rg.command = fargs[0]
-	rg.args = fargs[1:]
+	if len(fargs) > 1 {
+		rg.command = fargs[0]
+		rg.args = fargs[1:]
+	}
 }
