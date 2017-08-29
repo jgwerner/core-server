@@ -67,14 +67,12 @@ func TestRun_Stream(t *testing.T) {
 def test():
 	sys.stdout.write('%s')
 	sys.stderr.write('%s')
-	return '{}'
-test()`, stdoutMsg, stderrMsg)
+	return '{}'`, stdoutMsg, stderrMsg)
 	prepareScript(code)
 	go assert(os.Stdout, stdoutMsg)
-	go assert(os.Stdout, stderrMsg)
+	go assert(os.Stderr, stderrMsg)
 	stats := NewStats()
 	Run(context.Background(), stats, args.Script, `test()`)
-
 }
 
 func TestRun_Fail(t *testing.T) {
