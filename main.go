@@ -17,6 +17,7 @@ func main() {
 	args.ResourceDir = "/resources"
 	flag.StringVar(&args.ApiKey, "key", "", "Api Key")
 	flag.StringVar(&args.Namespace, "ns", "", "Namespace")
+	flag.StringVar(&args.Version, "version", "v1", "version")
 	flag.StringVar(&args.ProjectID, "projectID", "", "Project id")
 	flag.StringVar(&args.ServerID, "serverID", "", "Server id")
 	flag.StringVar(&args.KernelName, "kernel", "python", "Kernel name")

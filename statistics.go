@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/3Blades/go-sdk/client/projects"
+	"github.com/3Blades/go-sdk/models"
 )
 
 // Stats is base statistics gatherer
@@ -27,17 +28,17 @@ func (s *Stats) Duration() time.Duration {
 
 // Send writes statistics data to database
 func (s *Stats) Send(args *Args) error {
-	cli := APIClient(args.ApiRoot, args.ApiKey)
+	cli := NewAPIClient(args.ApiRoot, args.ApiKey)
 	params := projects.NewProjectsServersRunStatsCreateParams()
 	params.SetNamespace(args.Namespace)
-	params.SetProjectPk(args.ProjectID)
-	params.SetServerPk(args.ServerID)
-	params.SetData(projects.ProjectsServersRunStatsCreateBody{
+	params.SetProjectID(args.ProjectID)
+	params.SetServerID(args.ServerID)
+	params.SetServerrunstatsData(&models.ServerRunStatisticsData{
 		Start:      s.Start.Format(time.RFC3339),
 		Stop:       s.Stop.Format(time.RFC3339),
 		ExitCode:   int64(s.ExitCode),
 		Stacktrace: s.Stacktrace,
 	})
-	_, err := cli.Projects.ProjectsServersRunStatsCreate(params)
+	_, err := cli.Projects.ProjectsServersRunStatsCreate(params, cli.AuthInfo)
 	return err
 }
