@@ -59,7 +59,7 @@ func checkToken(apiRoot, token string) bool {
 	params := projects.NewProjectsServersAuthParams()
 	params.SetNamespace(args.Namespace)
 	params.SetProjectID(args.ProjectID)
-	params.SetID(args.ServerID)
+	params.SetServerID(args.ServerID)
 	authInfo := CreateAuthInfo(token)
 	_, err := cli.Projects.ProjectsServersAuth(params, authInfo)
 	if err != nil {
