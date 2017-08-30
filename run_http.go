@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 
 	"time"
@@ -24,7 +23,7 @@ func (rh *RunHTTP) Run() error {
 	server := &http.Server{
 		Addr:        ":8000",
 		ReadTimeout: 10 * time.Second,
-		Handler:     handlers.LoggingHandler(os.Stdout, mux),
+		Handler:     handlers.LoggingHandler(out, mux),
 	}
 	return server.ListenAndServe()
 }

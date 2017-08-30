@@ -18,7 +18,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	RunKernelGateway(os.Stdout, os.Stderr, "python")
+	out = new(bytes.Buffer)
+	RunKernelGateway(out, out, "python")
 	time.Sleep(1 * time.Second)
 	GetKernel()
 	exitCode := m.Run()
@@ -52,6 +53,10 @@ func TestRun_Success(t *testing.T) {
 }
 
 func TestRun_Stream(t *testing.T) {
+	out.(*bytes.Buffer).Reset()
+	const stdoutMsg = "streamstdouttest"
+	const stderrMsg = "streamstderrtest"
+
 	assert := func(r io.Reader, msg string) {
 		var buf bytes.Buffer
 		io.Copy(&buf, r)
@@ -60,19 +65,18 @@ func TestRun_Stream(t *testing.T) {
 		}
 	}
 
-	const stdoutMsg = "streamstdouttest"
-	const stderrMsg = "streamstderrtest"
-
-	code := fmt.Sprintf(`import sys
-def test():
-	sys.stdout.write('%s')
-	sys.stderr.write('%s')
+	code := fmt.Sprintf(`def test():
+	print('%s')
+	print('%s')
 	return '{}'`, stdoutMsg, stderrMsg)
 	prepareScript(code)
+	stats := NewStats()
 	go assert(os.Stdout, stdoutMsg)
 	go assert(os.Stderr, stderrMsg)
-	stats := NewStats()
-	Run(context.Background(), stats, args.Script, `test()`)
+	_, err := Run(context.Background(), stats, args.Script, `test()`)
+	if err != nil {
+		t.Error(err.Error())
+	}
 }
 
 func TestRun_Fail(t *testing.T) {
