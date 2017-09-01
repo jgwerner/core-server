@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
 
 RUN apt-get update && \
     apt-get install -yq --no-install-recommends \
