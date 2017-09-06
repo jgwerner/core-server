@@ -52,20 +52,28 @@ func validateJSON(s []byte) bool {
 }
 
 func checkToken(apiRoot, token string) bool {
+	log.Println("In checkToken")
 	if token == "" {
 		return false
 	}
+	log.Println("About to create cli client")
+	log.Println(apiRoot)
+	log.Println(token)
 	cli := NewAPIClient(apiRoot, token)
 	params := projects.NewProjectsServersAuthParams()
 	params.SetNamespace(args.Namespace)
 	params.SetProjectID(args.ProjectID)
 	params.SetServerID(args.ServerID)
+	log.Println("about to create Auth INfo")
 	authInfo := CreateAuthInfo(token)
+	log.Println("Created Auth Info. About to Try to authenticate for server")
 	_, err := cli.Projects.ProjectsServersAuth(params, authInfo)
+	log.Println("Back from authentication attempt")
 	if err != nil {
 		log.Println(err)
 		return false
 	}
+	log.Println("Auth was successful")
 	return true
 }
 

@@ -43,9 +43,17 @@ func (rp *RunProxy) Run() error {
 		return err
 	}
 	targetURL, _ := url.Parse("http://localhost:8888")
+	log.Print("targetURL: ")
+	log.Println(targetURL)
 	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+	log.Print("Proxy: ")
+	log.Println(proxy)
 	r := mux.NewRouter()
+	log.Print("r: ")
+	log.Println(r)
+	log.Println("About to call Handle")
 	r.Handle("/{version}/{namespace}/projects/{projectID}/servers/{serverID}/endpoint/{service}{path:.*}", handle(proxy))
+	log.Println("Back from handle")
 	server := &http.Server{
 		Addr:           ":8080",
 		Handler:        r,
@@ -53,10 +61,12 @@ func (rp *RunProxy) Run() error {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
 	}
+	log.Println("Created server")
 	return server.ListenAndServe()
 }
 
 func handle(proxy *httputil.ReverseProxy) http.Handler {
+	log.Println("In handle function")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		connectionHeader := strings.ToLower(r.Header.Get("Connection"))
 		upgradeHeader := strings.ToLower(r.Header.Get("Upgrade"))
@@ -76,17 +86,25 @@ func handle(proxy *httputil.ReverseProxy) http.Handler {
 		}
 		var token string
 		sessionToken, ok := session.Values["token"]
+		log.Print("Token from session: ")
+		log.Println(sessionToken)
 		if !ok {
 			token = r.URL.Query().Get("access_token")
+			log.Print("Token from URL Query Parm: ")
+			log.Println(token)
 		} else {
 			token = sessionToken.(string)
 		}
+		log.Println("About to check token")
+		log.Println(args.ApiRoot)
 		if checkToken(args.ApiRoot, token) {
+			log.Println("checkToken was successful")
 			session.Values["token"] = token
 			session.Save(r, w)
 			proxy.ServeHTTP(w, r)
 			return
 		}
+		log.Println("checkToken was unsuccessful")
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	})
 }
