@@ -33,17 +33,21 @@ func main() {
 		args.ServerType = os.Getenv("SERVER_TYPE")
 	}
 	SetKernelName(args.KernelName)
+	logger.Println("About to chdir")
 	err := os.Chdir(args.ResourceDir)
 	if err != nil {
 		logger.Fatal(err)
 	}
+	logger.Println("About to start script")
 	err = StartScript()
 	if err != nil {
 		logger.Fatalf("[StartScript]: %s", err)
 	}
+	logger.Println("About to create SSH Tunnels (expect an error)")
 	err = CreateSSHTunnels(args)
 	if err != nil {
 		logger.Printf("[SSH tunnel]: %s", err)
 	}
+	logger.Println("About to call getRunner().Run()")
 	logger.Fatal(getRunner(args.ServerType).Run())
 }
