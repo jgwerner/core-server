@@ -2,7 +2,6 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version
       - image: circleci/golang:1.9
 
     working_directory: /go/src/github.com/jgwerner/core-server
@@ -11,8 +10,8 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install -yq python3-pip python3-dev virtualenv
       - run: go get golang.org/x/tools/cmd/cover
-      - run: git checkout
       - run: go get -v -t -d ./...
+      - run: virtualenv -p python3 venv
       - run: source venv/bin/activate
       - run: pip3 install jupyter_kernel_gateway==1.2.2
       - run: make test

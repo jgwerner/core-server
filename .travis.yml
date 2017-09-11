@@ -30,4 +30,5 @@ after_success:
 notifications:
   slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
 env:
-  - $DOCKER_IMAGE_NAME="3blades/core-server"
+  global:
+    - $DOCKER_IMAGE_NAME="3blades/core-server"
