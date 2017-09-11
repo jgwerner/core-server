@@ -11,7 +11,11 @@ services:
   - docker
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -yq python3-pip
+  - sudo apt-get install -yq python3-pip python3-dev build-essential
+  - sudo pip install virtualenv
+  - virtualenv -p python3 venv
+  - source venv/bin/activate
+  - export GOPATH=$GOPATH:$HOME
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
 install:
@@ -29,4 +33,5 @@ after_success:
 notifications:
   slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
 env:
-  - $DOCKER_IMAGE_NAME="3blades/core-server"
+  global:
+    - $DOCKER_IMAGE_NAME="3blades/core-server"

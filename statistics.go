@@ -31,8 +31,8 @@ func (s *Stats) Send(args *Args) error {
 	cli := NewAPIClient(args.ApiRoot, args.ApiKey)
 	params := projects.NewProjectsServersRunStatsCreateParams()
 	params.SetNamespace(args.Namespace)
-	params.SetProjectID(args.ProjectID)
-	params.SetServerID(args.ServerID)
+	params.SetProject(args.ProjectID)
+	params.SetServer(args.ServerID)
 	params.SetServerrunstatsData(&models.ServerRunStatisticsData{
 		Start:      s.Start.Format(time.RFC3339),
 		Stop:       s.Stop.Format(time.RFC3339),
