@@ -11,6 +11,7 @@ jobs:
       - run: sudo apt-get update
       - run: sudo apt-get install -yq python3-pip python3-dev virtualenv
       - run: go get golang.org/x/tools/cmd/cover
+      - run: git checkout
       - run: go get -v -t -d ./...
       - run: source venv/bin/activate
       - run: pip3 install jupyter_kernel_gateway==1.2.2
