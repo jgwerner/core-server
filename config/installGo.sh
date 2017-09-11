@@ -21,7 +21,6 @@ fi
 
 echo "Extracting ..."
 tar -C "$HOME" -xzf /tmp/go.tar.gz
-mv "$HOME/go" "$HOME/.go"
 
 echo "Export environment variables ..."
 GOROOT=$HOME/.go
