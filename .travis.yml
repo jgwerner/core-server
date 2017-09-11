@@ -1,7 +1,7 @@
 # whitelist
-language: python
-python:
-  - 3.6
+language: go
+go:
+  - 1.9
 branches:
   only:
     - master
@@ -11,10 +11,11 @@ services:
   - docker
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -yq python3-pip libzmq3-dev wget
-  - bash config/installGo.sh --64
+  - sudo apt-get install -yq python3-pip python3-dev virtualenv
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
+  - virtualenv -p python3 venv
+  - source venv/bin/activate
 install:
   - pip3 install jupyter_kernel_gateway==1.2.2
 script:
@@ -30,5 +31,4 @@ after_success:
 notifications:
   slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
 env:
-  global:
-    - $DOCKER_IMAGE_NAME="3blades/core-server"
+  - $DOCKER_IMAGE_NAME="3blades/core-server"
