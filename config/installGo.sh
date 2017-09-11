@@ -23,7 +23,7 @@ echo "Extracting ..."
 tar -C "$HOME" -xzf /tmp/go.tar.gz
 
 echo "Export environment variables ..."
-GOROOT=$HOME/.go
+GOROOT=$HOME/go
 PATH=$PATH:$GOROOT/bin
 GOPATH=$HOME/go
 PATH=$PATH:$GOPATH/bin
