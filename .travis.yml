@@ -15,7 +15,7 @@ before_install:
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
 install:
-  - pip3 install jupyter_kernel_gateway==1.2.2
+  - pip3 install --user jupyter_kernel_gateway==1.2.2
 script:
   - make test
   - make
