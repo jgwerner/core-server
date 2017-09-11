@@ -17,6 +17,15 @@ Includes the following functionality:
 - Cron server
 - RESTful endpoint server
 
+Any image could conceivably use core-server functionality. We suggest building custom images with [docker multi-stage builds](https://docs.docker.com/engine/userguide/eng-image/multistage-build/). For example:
+
+```
+FROM 3blades/core-server AS core
+FROM tensorflow/tensorflow:latest-gpu
+COPY --from=core runner /runner
+EXPOSE 8080
+```
+
 ## Copyright and license
 
 Copyright © 2016-2017 3Blades, LLC. All rights reserved, except as follows. Code
