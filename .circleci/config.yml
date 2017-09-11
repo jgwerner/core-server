@@ -14,7 +14,7 @@ jobs:
       - run: sudo apt-get install -yq python3-pip
       - run: go get golang.org/x/tools/cmd/cover
       - run: go get -v -t -d ./...
-      - run: pip3 install jupyter_kernel_gateway==1.2.2
+      - run: sudo pip3 install jupyter_kernel_gateway==1.2.2
       - run: make test
       - run: make
       - run: docker --version
