@@ -9,10 +9,6 @@ VERSION=v0.0.1
 
 $(BINARY): $(SOURCES)
 	CGO_ENABLED=0 go build -o ${BINARY} *.go
-	cp ${BINARY} ./Python35
-	cp ${BINARY} ./Python27
-	cp ${BINARY} ./R
-	cp ${BINARY} ./Spark
 
 .PHONY: test
 test:
