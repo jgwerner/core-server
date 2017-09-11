@@ -1,7 +1,7 @@
 # whitelist
 language: go
 go:
-  - 1.9
+  - 1.8.3
 branches:
   only:
     - master
@@ -11,11 +11,11 @@ services:
   - docker
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -yq python3-pip
+  - sudo apt-get install -yq python3-pip libzmq3-dev
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
 install:
-  - pip3 install jupyter_kernel_gateway==1.2.2
+  - sudo pip3 install jupyter_kernel_gateway==1.2.2
 script:
   - make test
   - make

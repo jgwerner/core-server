@@ -22,8 +22,8 @@ func CreateSSHTunnels(args *Args) error {
 	cli := NewAPIClient(args.ApiRoot, args.ApiKey)
 	params := projects.NewProjectsServersSSHTunnelsListParams()
 	params.SetNamespace(args.Namespace)
-	params.SetProjectID(args.ProjectID)
-	params.SetServerID(args.ServerID)
+	params.SetProject(args.ProjectID)
+	params.SetServer(args.ServerID)
 	res, err := cli.Projects.ProjectsServersSSHTunnelsList(params, cli.AuthInfo)
 	if err != nil {
 		return err
