@@ -13,7 +13,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -yq python3-pip libzmq3-dev wget
   - wget https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz
-  - tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz
+  - tar -C /usr/local -xzf gogolang/go1.9.linux-amd64.tar.gz
   - export PATH=$PATH:/usr/local/go/bin
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
