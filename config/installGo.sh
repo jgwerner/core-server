@@ -26,7 +26,7 @@ echo "Export environment variables ..."
 GOROOT="$HOME/go"
 PATH="$PATH:$GOROOT/bin"
 GOPATH="$HOME/go"
-PATH="$PATH:$GOPATH/bin"
+PATH="$PATH:${GOPATH//://bin:}/bin"
 
 mkdir -p "$GOROOT"/{src,pkg,bin}
 echo -e "\nGo $VERSION was installed."
