@@ -11,7 +11,10 @@ services:
   - docker
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -yq golang-1.8-go python3-pip libzmq3-dev
+  - sudo apt-get install -yq python3-pip libzmq3-dev wget
+  - wget https://storage.googleapis.com/golang/go$VERSION.$OS-$ARCH.tar.gz
+  - tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz
+  - export PATH=$PATH:/usr/local/go/bin
   - go get golang.org/x/tools/cmd/cover
   - go get -t -v ./...
 install:
@@ -30,5 +33,6 @@ notifications:
   slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
 env:
   - $DOCKER_IMAGE_NAME="3blades/core-server"
-  - GOROOT=/usr/local/go
-  - PATH=$PATH:/usr/local/go/bin
+  - $VERSION=1.9
+  - $OS=linux
+  - $ARCH=amd64
