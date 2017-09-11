@@ -23,16 +23,11 @@ echo "Extracting ..."
 tar -C "$HOME" -xzf /tmp/go.tar.gz
 
 echo "Export environment variables ..."
-GOROOT=$HOME/go
-PATH=$PATH:$GOROOT/bin
-GOPATH=$HOME/go
-PATH=$PATH:$GOPATH/bin
+GOROOT="$HOME/go"
+PATH="$PATH:$GOROOT/bin"
+GOPATH="$HOME/go"
+PATH="$PATH:$GOPATH/bin"
 
-export $GOROOT
-export $PATH
-export $GOPATH
-export $PATH
-
-mkdir -p $HOME/go/{src,pkg,bin}
+mkdir -p "$GOROOT"/{src,pkg,bin}
 echo -e "\nGo $VERSION was installed."
 rm -f /tmp/go.tar.gz
