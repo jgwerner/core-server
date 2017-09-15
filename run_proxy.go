@@ -42,10 +42,7 @@ func (rp *RunProxy) Run() error {
 	if err != nil {
 		return err
 	}
-	targetURL, _ := url.Parse("http://localhost:8888")
-	log.Print("targetURL: ")
-	log.Println(targetURL)
-	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+	proxy := &httputil.ReverseProxy{Director: director}
 	log.Print("Proxy: ")
 	log.Println(proxy)
 	r := mux.NewRouter()
@@ -63,6 +60,17 @@ func (rp *RunProxy) Run() error {
 	}
 	log.Println("Created server")
 	return server.ListenAndServe()
+}
+
+func director(req *http.Request) {
+	targetURL, _ := url.Parse("http://localhost:8888")
+	log.Print("targetURL: ")
+	log.Println(targetURL)
+	log.Println(req)
+	vars := mux.Vars(req)
+	req.URL.Host = targetURL.Host
+	req.URL.Scheme = targetURL.Scheme
+	req.URL.Path = vars["path"]
 }
 
 func handle(proxy *httputil.ReverseProxy) http.Handler {
