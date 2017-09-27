@@ -90,6 +90,7 @@ func (rp *RunProxy) Run() error {
 			return nil
 		},
 	}
+	log.Printf("Proxy: %s\n", proxy)
 	server := &http.Server{
 		Addr:           ":8080",
 		Handler:        handle(proxy),
@@ -102,6 +103,7 @@ func (rp *RunProxy) Run() error {
 }
 
 func handle(proxy *httputil.ReverseProxy) http.Handler {
+	log.Println("Enter handle")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := handleWS(w, r)
 		if err != nil {
@@ -120,15 +122,20 @@ func handle(proxy *httputil.ReverseProxy) http.Handler {
 		sessionToken, ok := session.Values["token"]
 		if !ok {
 			token = r.URL.Query().Get("access_token")
+			log.Printf("Token from url param %s\n", token)
 		} else {
 			token = sessionToken.(string)
+			log.Printf("Token from session %s\n", token)
 		}
+		log.Println("About to check token")
 		if checkToken(args.ApiRoot, token) {
+			log.Println("checkToken was successful")
 			session.Values["token"] = token
 			session.Save(r, w)
 			proxy.ServeHTTP(w, r)
 			return
 		}
+		log.Println("Authorization failed")
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	})
 }
@@ -138,6 +145,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) error {
 	connectionHeader := strings.ToLower(r.Header.Get("Connection"))
 	upgradeHeader := strings.ToLower(r.Header.Get("Upgrade"))
 	if connectionHeader == "upgrade" && upgradeHeader == "websocket" {
+		log.Println("Handling websocket")
 		err = hijack(w, r)
 	}
 	return err
