@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -12,12 +14,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 )
 
-var sessionStore *sessions.CookieStore
+var (
+	sessionStore *sessions.CookieStore
+	serverPath   string
+)
 
 func init() {
 	secret := securecookie.GenerateRandomKey(32)
@@ -32,28 +36,63 @@ func init() {
 	sessionStore.MaxAge(sessionStore.Options.MaxAge)
 }
 
+type Transport struct {
+	tr http.RoundTripper
+}
+
+func (tr *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	reqc := new(http.Request)
+	*reqc = *req
+	if req.Body != nil {
+		var buf bytes.Buffer
+		defer req.Body.Close()
+		body := io.TeeReader(req.Body, &buf)
+		req.Body = ioutil.NopCloser(body)
+		reqc.Body = ioutil.NopCloser(&buf)
+	}
+	resp, err := tr.tr.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		req.URL.Path = strings.TrimPrefix(req.URL.Path, serverPath)
+		resp, err = tr.tr.RoundTrip(reqc)
+	}
+	return resp, err
+}
+
 type RunProxy struct {
 	gen *RunGeneric
 }
 
 func (rp *RunProxy) Run() error {
+	serverPath = fmt.Sprintf("/%s/%s/projects/%s/servers/%s/endpoint/proxy",
+		args.Version, args.Namespace, args.ProjectID, args.ServerID)
+	log.Printf("Server path: %s\n", serverPath)
 	go rp.gen.Run()
 	err := os.Chdir(args.ResourceDir)
 	if err != nil {
 		return err
 	}
-	proxy := &httputil.ReverseProxy{Director: director}
-	log.Print("Proxy: ")
-	log.Println(proxy)
-	r := mux.NewRouter()
-	log.Print("r: ")
-	log.Println(r)
-	log.Println("About to call Handle")
-	r.Handle("/{version}/{namespace}/projects/{projectID}/servers/{serverID}/endpoint/{service}{path:.*}", handle(proxy))
-	log.Println("Back from handle")
+	targetURL, _ := url.Parse("http://localhost:8888")
+	proxy := &httputil.ReverseProxy{
+		Transport: &Transport{http.DefaultTransport},
+		Director: func(req *http.Request) {
+			req.URL.Host = targetURL.Host
+			req.URL.Scheme = targetURL.Scheme
+		},
+		ModifyResponse: func(resp *http.Response) error {
+			loc, _ := resp.Location()
+			if loc != nil && !strings.HasPrefix(loc.Path, serverPath) {
+				loc.Path = serverPath + loc.Path
+				resp.Header.Set("Location", loc.String())
+			}
+			return nil
+		},
+	}
 	server := &http.Server{
 		Addr:           ":8080",
-		Handler:        r,
+		Handler:        handle(proxy),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
@@ -62,59 +101,46 @@ func (rp *RunProxy) Run() error {
 	return server.ListenAndServe()
 }
 
-func director(req *http.Request) {
-	targetURL, _ := url.Parse("http://localhost:8888")
-	log.Print("targetURL: ")
-	log.Println(targetURL)
-	log.Println(req)
-	vars := mux.Vars(req)
-	req.URL.Host = targetURL.Host
-	req.URL.Scheme = targetURL.Scheme
-	req.URL.Path = vars["path"]
-}
-
 func handle(proxy *httputil.ReverseProxy) http.Handler {
-	log.Println("In handle function")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		connectionHeader := strings.ToLower(r.Header.Get("Connection"))
-		upgradeHeader := strings.ToLower(r.Header.Get("Upgrade"))
-		if connectionHeader == "upgrade" && upgradeHeader == "websocket" {
-			err := hijack(w, r)
-			if err != nil {
-				log.Println(err)
-				http.Error(w, "Websocket error", http.StatusInternalServerError)
-			}
+		err := handleWS(w, r)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Websocket error", http.StatusInternalServerError)
 			return
 		}
 		sessionName := fmt.Sprintf("session-%s", args.ServerID)
 		session, err := sessionStore.Get(r, sessionName)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		var token string
 		sessionToken, ok := session.Values["token"]
-		log.Print("Token from session: ")
-		log.Println(sessionToken)
 		if !ok {
 			token = r.URL.Query().Get("access_token")
-			log.Print("Token from URL Query Parm: ")
-			log.Println(token)
 		} else {
 			token = sessionToken.(string)
 		}
-		log.Println("About to check token")
-		log.Println(args.ApiRoot)
 		if checkToken(args.ApiRoot, token) {
-			log.Println("checkToken was successful")
 			session.Values["token"] = token
 			session.Save(r, w)
 			proxy.ServeHTTP(w, r)
 			return
 		}
-		log.Println("checkToken was unsuccessful")
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	})
+}
+
+func handleWS(w http.ResponseWriter, r *http.Request) error {
+	var err error
+	connectionHeader := strings.ToLower(r.Header.Get("Connection"))
+	upgradeHeader := strings.ToLower(r.Header.Get("Upgrade"))
+	if connectionHeader == "upgrade" && upgradeHeader == "websocket" {
+		err = hijack(w, r)
+	}
+	return err
 }
 
 func hijack(w http.ResponseWriter, r *http.Request) error {
