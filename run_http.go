@@ -18,12 +18,10 @@ type RunHTTP struct{}
 func (rh *RunHTTP) Run() error {
 	RunKernelGateway(out, out, args.KernelName)
 	GetKernel()
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", ScriptHandler)
 	server := &http.Server{
-		Addr:        ":8000",
+		Addr:        ":6006",
 		ReadTimeout: 10 * time.Second,
-		Handler:     handlers.LoggingHandler(out, mux),
+		Handler:     handlers.LoggingHandler(out, http.HandlerFunc(ScriptHandler)),
 	}
 	return server.ListenAndServe()
 }
@@ -36,7 +34,7 @@ func ScriptHandler(w http.ResponseWriter, r *http.Request) {
 		appErr.Write(ctx, w)
 		return
 	}
-	if !checkToken(args.ApiRoot, r.Header.Get("Authorization")) {
+	if !checkToken(args.ApiRoot, r.URL.Query().Get("access_token")) {
 		appErr := AppError{
 			StatusCode: http.StatusForbidden,
 		}
