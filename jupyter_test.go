@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -49,33 +47,6 @@ func TestRun_Success(t *testing.T) {
 	data, _ := Run(context.Background(), stats, args.Script, `test()`)
 	if data != expected {
 		t.Errorf("Wrong data\nExpected: %s\nActual: %s\n", expected, data)
-	}
-}
-
-func TestRun_Stream(t *testing.T) {
-	out.(*bytes.Buffer).Reset()
-	const stdoutMsg = "streamstdouttest"
-	const stderrMsg = "streamstderrtest"
-
-	assert := func(r io.Reader, msg string) {
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		if !strings.Contains(buf.String(), msg) {
-			t.Error("Wrong msg")
-		}
-	}
-
-	code := fmt.Sprintf(`def test():
-	print('%s')
-	print('%s')
-	return '{}'`, stdoutMsg, stderrMsg)
-	prepareScript(code)
-	stats := NewStats()
-	go assert(os.Stdout, stdoutMsg)
-	go assert(os.Stderr, stderrMsg)
-	_, err := Run(context.Background(), stats, args.Script, `test()`)
-	if err != nil {
-		t.Error(err.Error())
 	}
 }
 
