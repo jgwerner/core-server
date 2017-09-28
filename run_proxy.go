@@ -20,7 +20,7 @@ import (
 var sessionStore *sessions.CookieStore
 
 func init() {
-	secret := securecookie.GenerateRandomKey(32)
+	secret := []byte(args.SecretKey)
 	sessionStore = &sessions.CookieStore{
 		Codecs: securecookie.CodecsFromPairs(secret),
 		Options: &sessions.Options{

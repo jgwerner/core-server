@@ -26,6 +26,7 @@ type Args struct {
 	KernelName  string
 	Script      string
 	Function    string
+	SecretKey   string
 }
 
 type APIClient struct {
