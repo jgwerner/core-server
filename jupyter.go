@@ -42,13 +42,6 @@ type msg struct {
 	Buffers      []interface{}          `json:"buffers"`
 }
 
-func (m *msg) UnmarshalJSON(data []byte) error {
-	log.Println(string(data[:]))
-	type alias msg
-	aux := &struct{ *alias }{(*alias)(m)}
-	return json.Unmarshal(data, &aux)
-}
-
 type header struct {
 	Username string `json:"username"`
 	Version  string `json:"version"`
