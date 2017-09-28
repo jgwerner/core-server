@@ -25,6 +25,7 @@ func main() {
 	flag.StringVar(&args.ApiRoot, "root", "", "Api Root domain")
 	flag.StringVar(&args.Script, "script", "", "Script to run")
 	flag.StringVar(&args.Function, "function", "", "Function to run")
+	flag.StringVar(&args.SecretKey, "secret", "", "Secret key")
 	flag.Parse()
 	if args.KernelName == "" {
 		args.KernelName = os.Getenv("KERNEL_NAME")
