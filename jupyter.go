@@ -42,13 +42,20 @@ type msg struct {
 	Buffers      []interface{}          `json:"buffers"`
 }
 
+func (m *msg) UnmarshalJSON(data []byte) error {
+	log.Println(string(data[:]))
+	type alias msg
+	aux := &struct{ *alias }{(*alias)(m)}
+	return json.Unmarshal(data, &aux)
+}
+
 type header struct {
-	Username string    `json:"username"`
-	Version  string    `json:"version"`
-	Session  uuid.UUID `json:"session"`
-	MsgID    uuid.UUID `json:"msg_id"`
-	MsgType  string    `json:"msg_type"`
-	Date     string    `json:"date"`
+	Username string `json:"username"`
+	Version  string `json:"version"`
+	Session  string `json:"session"`
+	MsgID    string `json:"msg_id"`
+	MsgType  string `json:"msg_type"`
+	Date     string `json:"date"`
 }
 
 // kernel represents jupyter kernel info
@@ -196,9 +203,9 @@ func createMsg(msgType, channel string, content map[string]interface{}) *msg {
 	return &msg{
 		Header: &header{
 			Version: "5.0",
-			MsgID:   uuid.NewV4(),
+			MsgID:   uuid.NewV4().String(),
 			MsgType: msgType,
-			Session: uuid.NewV4(),
+			Session: uuid.NewV4().String(),
 			Date:    time.Now().Format(time.RFC3339),
 		},
 		Channel: channel,
