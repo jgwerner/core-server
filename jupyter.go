@@ -91,37 +91,36 @@ func RunKernelGateway(stdout, stderr io.Writer, kernelName string) {
 }
 
 // Run sends code to jupyter kernel for processing
-func Run(ctx context.Context, stats *Stats, script, function string) (string, error) {
+func Run(ctx context.Context, script, function string) (string, time.Duration, error) {
+	duration := time.Duration(0)
 	ws := dialKernelWebSocket()
 	respCh := make(chan string)
 	errCh := make(chan string)
 	go handleWebSocket(ws, respCh, errCh)
 	scriptContent, err := scriptContent(script)
 	if err != nil {
-		return "", err
+		return "", duration, err
 	}
 	err = websocket.JSON.Send(ws, createExecuteMsg(scriptContent))
 	if err != nil {
-		return "", err
+		return "", duration, err
 	}
 	err = websocket.JSON.Send(ws, createExecuteMsg(function))
 	if err != nil {
-		return "", err
+		return "", duration, err
 	}
 	var data string
-	stats.Start = time.Now().UTC()
+	start := time.Now().UTC()
 	select {
 	case data = <-respCh:
-		stats.ExitCode = 0
 		data = strings.Trim(data, "'")
 	case data = <-errCh:
-		stats.ExitCode = 1
 		err = errors.New("Script error")
 		break
 	case <-ctx.Done():
 	}
-	stats.Stop = time.Now().UTC()
-	return data, err
+	duration = time.Now().UTC().Sub(start) / time.Millisecond
+	return data, duration, err
 }
 
 func scriptContent(script string) (string, error) {

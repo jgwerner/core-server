@@ -50,11 +50,10 @@ func ScriptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := CreateResponseFromRequest(requestData)
-	stats := NewStats()
 	re := regexp.MustCompile(`\r?\n`)
 	rawCode := fmt.Sprintf(`%s('%s')`, args.Function, requestData.DataString())
 	code := re.ReplaceAllString(rawCode, "")
-	data, err := Run(ctx, stats, args.Script, code)
+	data, duration, err := Run(ctx, args.Script, code)
 	if err != nil {
 		appErr := AppError{
 			Err:        err,
@@ -65,7 +64,7 @@ func ScriptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.Status = "ok"
-	resp.ExecutionTime = stats.Duration()
+	resp.ExecutionTime = duration
 	resp.Data = []byte(data)
 	resp.Write(ctx, w)
 }

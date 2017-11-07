@@ -10,11 +10,9 @@ type RunCode struct{}
 func (rp *RunCode) Run() error {
 	RunKernelGateway(out, out, args.KernelName)
 	GetKernel()
-	stats := NewStats()
-	_, err := Run(context.Background(), stats, args.Script, fmt.Sprintf("%s()", args.Function))
+	_, _, err := Run(context.Background(), args.Script, fmt.Sprintf("%s()", args.Function))
 	if err != nil {
 		return err
 	}
-	stats.Send(args)
 	return err
 }

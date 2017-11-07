@@ -86,6 +86,7 @@ func (rp *RunProxy) Run() error {
 			if loc != nil && !strings.HasPrefix(loc.Path, serverPath) {
 				loc.Host = args.ApiRoot
 				loc.Path = serverPath + loc.Path
+				log.Printf(loc.String())
 				resp.Header.Set("Location", loc.String())
 			}
 			return nil

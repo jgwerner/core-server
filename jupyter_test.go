@@ -43,8 +43,7 @@ func TestRun_Success(t *testing.T) {
 	expected := `{'test': 1}`
 	code := fmt.Sprintf("def test():\n\treturn %s", expected)
 	prepareScript(code)
-	stats := NewStats()
-	data, _ := Run(context.Background(), stats, args.Script, `test()`)
+	data, _, _ := Run(context.Background(), args.Script, `test()`)
 	if data != expected {
 		t.Errorf("Wrong data\nExpected: %s\nActual: %s\n", expected, data)
 	}
@@ -53,8 +52,7 @@ func TestRun_Success(t *testing.T) {
 func TestRun_Fail(t *testing.T) {
 	code := `test1`
 	prepareScript(code)
-	stats := NewStats()
-	data, err := Run(context.Background(), stats, args.Script, `test()`)
+	data, _, err := Run(context.Background(), args.Script, `test()`)
 	if err == nil {
 		t.Error("No error with bad data")
 	}
