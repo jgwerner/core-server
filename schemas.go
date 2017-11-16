@@ -110,7 +110,6 @@ func (sr *Response) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		logger.Printf("Error encoding response: %s\n%s", err, sr)
 	}
-	logger.Printf("Response: %s", resp)
 	return resp, err
 }
 
