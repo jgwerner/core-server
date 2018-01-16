@@ -119,7 +119,12 @@ func handle(proxy *httputil.ReverseProxy) http.Handler {
 		sessionToken, ok := session.Values["token"]
 		if !ok {
 			splitted := strings.Split(r.Header.Get("Authorization"), " ")
-			token = splitted[1]
+			if len(splitted) == 2 {
+				token = splitted[1]
+			} else {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return
+			}
 		} else {
 			token = sessionToken.(string)
 		}
