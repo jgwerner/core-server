@@ -118,7 +118,8 @@ func handle(proxy *httputil.ReverseProxy) http.Handler {
 		var token string
 		sessionToken, ok := session.Values["token"]
 		if !ok {
-			token = r.URL.Query().Get("access_token")
+			splitted := strings.Split(r.Header.Get("Authorization"), " ")
+			token = splitted[1]
 		} else {
 			token = sessionToken.(string)
 		}
