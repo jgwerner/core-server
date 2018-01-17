@@ -195,9 +195,9 @@ func createMsg(msgType, channel string, content map[string]interface{}) *msg {
 	return &msg{
 		Header: &header{
 			Version: "5.0",
-			MsgID:   uuid.NewV4().String(),
+			MsgID:   uuid.Must(uuid.NewV4()).String(),
 			MsgType: msgType,
-			Session: uuid.NewV4().String(),
+			Session: uuid.Must(uuid.NewV4()).String(),
 			Date:    time.Now().Format(time.RFC3339),
 		},
 		Channel: channel,
