@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	apiclient "github.com/3Blades/go-sdk/client"
-	"github.com/3Blades/go-sdk/client/projects"
+	apiclient "github.com/IllumiDesk/go-sdk/client"
+	"github.com/IllumiDesk/go-sdk/client/projects"
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -30,7 +30,7 @@ type Args struct {
 }
 
 type APIClient struct {
-	*apiclient.Threeblades
+	*apiclient.Illumidesk
 	AuthInfo runtime.ClientAuthInfoWriterFunc
 }
 
