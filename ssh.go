@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/3Blades/go-sdk/client/projects"
+	"github.com/IllumiDesk/go-sdk/client/projects"
 	cssh "golang.org/x/crypto/ssh"
 )
 

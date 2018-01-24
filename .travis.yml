@@ -34,4 +34,4 @@ notifications:
   slack: 3blades:0hkVceOdmVuyXNpgHJHCneo9
 env:
   global:
-    - $DOCKER_IMAGE_NAME="3blades/core-server"
+    - $DOCKER_IMAGE_NAME="illumidesk/core-server"
