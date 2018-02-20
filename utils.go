@@ -6,13 +6,17 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	apiclient "github.com/IllumiDesk/go-sdk/client"
 	"github.com/IllumiDesk/go-sdk/client/projects"
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	cache "github.com/patrickmn/go-cache"
 )
+
+var store = cache.New(5*time.Second, time.Minute)
 
 type Args struct {
 	ApiKey      string
@@ -56,6 +60,10 @@ func checkToken(apiRoot, token string) bool {
 	if token == "" {
 		return false
 	}
+	_, found := store.Get(token)
+	if found {
+		return true
+	}
 	cli := NewAPIClient(apiRoot, token)
 	params := projects.NewProjectsServersAuthParams()
 	params.SetNamespace(args.Namespace)
@@ -67,6 +75,7 @@ func checkToken(apiRoot, token string) bool {
 		log.Println(err)
 		return false
 	}
+	store.Set(token, true, cache.DefaultExpiration)
 	return true
 }
 
